@@ -47,53 +47,7 @@ class GraphQLSubscriptionDemo extends StatelessWidget {
   }
 }
 
-class IncrementButton extends StatelessWidget {
-  static String incr = '''mutation{
-  emitirNotificacion(input: {
-    idUsuario:"7152",
-    typo:FOLLOW,
-    mensaje:"h",
-    idPersona: "11",
-    nombre:"jsjs",
-    imagen:"sas"
-  }){
-    topic
-    partition
-    offset
-    timestamp
-  }
-}
-''';
 
-  @override
-  Widget build(BuildContext context) {
-    return Mutation(
-      options: MutationOptions(
-        documentNode: gql(incr),
-      ),
-      builder: (
-        RunMutation runMutation,
-        QueryResult result,
-      ) {
-        return Column(
-          children: [
-            Center(
-              child: RaisedButton.icon(
-                onPressed: () {
-                  runMutation({});
-                },
-                icon: Icon(Icons.notification_add
-                ),
-                label: Text('Emitir'),
-              ),
-            ),
-            Text(result.data.toString() ?? 'hola')
-          ],
-        );
-      },
-    );
-  }
-}
 
 class Counter extends StatelessWidget {
   static String subscription = '''subscription{

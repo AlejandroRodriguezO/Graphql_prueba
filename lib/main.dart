@@ -9,7 +9,7 @@ class GraphQLSubscriptionDemo extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final HttpLink httpLink = HttpLink(
-      uri: 'http://137.184.33.31:5847/graphql',
+      uri: 'http://test.qiubapp.com:5847/graphql',
     );
 
     final WebSocketLink websocketLink = WebSocketLink(
@@ -38,7 +38,11 @@ class GraphQLSubscriptionDemo extends StatelessWidget {
           body: Padding(
             padding: const EdgeInsets.all(20.0),
             child: Column(
-              children: [Counter(), ],
+              children: [
+                IncrementButton(),
+                SizedBox(height: 3, child: Container(color: Colors.green)),
+                Counter()
+              ],
             ),
           ),
         ),
@@ -47,7 +51,47 @@ class GraphQLSubscriptionDemo extends StatelessWidget {
   }
 }
 
+class IncrementButton extends StatelessWidget {
+  static String emit = '''
+  mutation{
+    emitirNotificacion(input:{
+      idUsuario:"9520"
+      nombre:"Alejandro notifica44"
+      typo:COMMENT
+      imagen:"sandakjsdnkjandsj"
+      idPersona:"123"
+      mensaje:["El usuario","alejandro","le gusta","su comentario."]
+    }){
+      topic
+      partition
+      offset
+      timestamp
+    }
+  }''';
 
+  @override
+  Widget build(BuildContext context) {
+    return Mutation(
+      options: MutationOptions(
+        documentNode: gql(emit),
+      ),
+      builder: (
+        RunMutation runMutation,
+        QueryResult result,
+      ) {
+        return Center(
+          child: RaisedButton.icon(
+            onPressed: () {
+              runMutation({});
+            },
+            icon: Icon(Icons.plus_one),
+            label: Text(""),
+          ),
+        );
+      },
+    );
+  }
+}
 
 class Counter extends StatelessWidget {
   static String subscription = '''subscription{
@@ -66,18 +110,17 @@ class Counter extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Subscription(
-      "escucharNotificaciones",
+      null,
       subscription,
       builder: ({
         bool loading,
         dynamic payload,
         dynamic error,
       }) {
-        print(error);
-        if (payload != null) {
+        if (payload != null && payload.isNotEmpty) {
           return Text(payload.toString());
         } else {
-          return Text(error.toString());
+          return Text("Paso sin datos");
         }
       },
     );

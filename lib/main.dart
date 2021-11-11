@@ -9,11 +9,11 @@ class GraphQLSubscriptionDemo extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final HttpLink httpLink = HttpLink(
-      uri: 'http://137.184.33.31:5847/graphql',
+      'http://137.184.33.31:5847/graphql',
     );
 
     final WebSocketLink websocketLink = WebSocketLink(
-      url: 'ws://test.qiubapp.com:5847/subscriptions',
+      'ws://test.qiubapp.com:5847/subscriptions',
       config: SocketClientConfig(
         autoReconnect: true,
         inactivityTimeout: Duration(seconds: 30),
@@ -22,7 +22,7 @@ class GraphQLSubscriptionDemo extends StatelessWidget {
 
     ValueNotifier<GraphQLClient> client = ValueNotifier(
       GraphQLClient(
-        cache: InMemoryCache(),
+        cache: GraphQLCache(),
         link: httpLink.concat(websocketLink),
       ),
     );
@@ -38,7 +38,9 @@ class GraphQLSubscriptionDemo extends StatelessWidget {
           body: Padding(
             padding: const EdgeInsets.all(20.0),
             child: Column(
-              children: [Counter(), ],
+              children: [
+                Counter(),
+              ],
             ),
           ),
         ),
@@ -47,10 +49,8 @@ class GraphQLSubscriptionDemo extends StatelessWidget {
   }
 }
 
-
-
 class Counter extends StatelessWidget {
-  static String subscription = '''subscription{
+  static final subscription = gql('''subscription{
   escucharNotificaciones(code: "9520"){
     typo
     mensaje
@@ -61,25 +61,33 @@ class Counter extends StatelessWidget {
     creado
     eventoId
   }
-}''';
+}''');
 
   @override
   Widget build(BuildContext context) {
     return Subscription(
-      "escucharNotificaciones",
-      subscription,
-      builder: ({
-        bool loading,
-        dynamic payload,
-        dynamic error,
-      }) {
-        print(error);
-        if (payload != null) {
-          return Text(payload.toString());
-        } else {
-          return Text(error.toString());
-        }
-      },
-    );
+        options: SubscriptionOptions(
+          document: subscription,
+        ),
+        builder: (result) {
+          if (result.hasException) {
+            return Text(result.exception.toString());
+          }
+
+          if (result.isLoading) {
+            return Center(
+              child: const CircularProgressIndicator(),
+            );
+          }
+          // ResultAccumulator is a provided helper widget for collating subscription results.
+          // careful though! It is stateful and will discard your results if the state is disposed
+          return ResultAccumulator.appendUniqueEntries(
+              latest: result.data,
+              builder: (context, {results}) => ListView.builder(
+                    itemCount: result.data!.length,
+                    itemBuilder: (context, index) =>
+                        Text(result.data.toString()),
+                  ));
+        });
   }
 }
